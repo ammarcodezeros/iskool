@@ -6,51 +6,51 @@ const jwt = require('jsonwebtoken');
 const helper = require('../utilatis/helper');
 
 const User = require("../models/user");
-const user = require("../models/user");
 
 router.post("/signup", (req, res, next) => {
   User.find({ email: req.body.email })
     .exec()
     .then(user => {
       if (user.length >= 1) {
-        return res.status(409).json({
-          message: "Mail exists"
-        });
+        return res.status(409).json(
+          helper.setErrorResponse({ message: "Mail already exists" })
+        );
       } else {
         bcrypt.hash(req.body.password, 10, (err, hash) => {
           if (err) {
-            return res.status(500).json({
-              error: "plz password"
-            });
+            return res.status(500).json(
+              helper.setErrorResponse({ message: "Password must be contain 6 letters with 1 capital, 1 number and 1 special character." })
+            );  
 
           } else {
 
             if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/.test(req.body.password)) {
-              return res.status(500).json({
-                error: "Password must be contain 6 letters with 1 capital, 1 number and 1 special character."
-              });
+              return res.status(500).json(
+                helper.setErrorResponse({ message: "Password must be contain 6 letters with 1 capital, 1 number and 1 special character." })
+              );  
             }
 
+         
             if (!/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(req.body.mobileno)) {
-              return res.status(500).json({
-                error: "mobile number must be contain 10 numbers"
-              });
+              return res.status(500).json(
+                helper.setErrorResponse({ message: "mobile number must be contain 10 numbers" })
+              );
             }
 
             if (!req.body.firstname) {
-              return res.status(500).json(helper.setErrorResponse({ status: 400, message: "firstname Required" }));
+              return res.status(500).json(helper.setErrorResponse({ message: "firstname Required" }));
             }
 
             if (!req.body.lastname) {
-              return res.status(500).json(helper.setErrorResponse({ status: 400, message: "Lastname Required" }));
+              return res.status(500).json(helper.setErrorResponse({ message: "Lastname Required" }));
             }
 
             if (!req.body.email) {
-              return res.status(500).json(helper.setErrorResponse({ status: 400, message: "Email Address Required" }));
+              return res.status(500).json(helper.setErrorResponse({ message: "Email Address Required" }));
             }
 
             if (!req.body.mobileno) {
-              return res.status(500).json(helper.setErrorResponse({ status: 400, message: "Mobileno Required" }));
+              return res.status(500).json(helper.setErrorResponse({ message: "Mobileno Required" }));
             }
 
             const user = new User({
@@ -82,11 +82,10 @@ router.post("/signup", (req, res, next) => {
                     data: {
                       "firstname": resultData.firstname,
                       "lastname": resultData.lastname,
-                      "email":resultData.email,
+                      "email": resultData.email,
                       "mobileno":resultData.mobileno
                     }
                   }
-                  
                   return res.status(200).json(helper.setSuccessResponse({ recordset: obj }));
                 }
                 console.log(recordset);
@@ -111,15 +110,15 @@ router.post('/login', (req, res, next) => {
     .then(user => {
       console.log(req.body);
       if (user.length < 1) {
-        return res.status(401).json({
-          message: "auth failed"
-        })
+        return res.status(401).json(
+          helper.setErrorResponse({ message: "auth failed" })
+          )
       }
       bcrypt.compare(req.body.password, user.password, (err, result) => {
         if (err) {
-          return res.status(401).json({
-            message: "auth failed"
-          });
+          return res.status(401).json(
+            helper.setErrorResponse({ message: "auth failed" })
+            );
         }
         if (result) {
           const token = jwt.sign(
@@ -136,14 +135,13 @@ router.post('/login', (req, res, next) => {
             data: user,
             token: token
           }
-          return res.status(200).json({
-            message: "Auth successful",
-            data: obj
-          });
+          return res.status(200).json(
+            helper.setSuccessResponse({ message: "Auth successful", recordset: obj})
+          );
         }
-        return res.status(401).json({
-          message: "auth failed"
-        })
+        return res.status(401).json(
+          helper.setErrorResponse({ message: "auth failed" })
+        )
       });
     })
     .catch(err => {
@@ -158,15 +156,14 @@ router.delete("/:userId", (req, res, next) => {
   user.remove({ _id: req.params.userId })
     .exec()
     .then(result => {
-      res.status(200).json({
-        message: "User deleted"
-      });
+      res.status(200).json(
+        helper.setSuccessResponse({ message: "User deleted"})
+      );
     })
     .catch(err => {
       console.log(err);
-      res.status(500).json({
-        error: err
-      });
+      res.status(500).json(
+        helper.setErrorResponse({ status:500 }));
     });
 });
 
@@ -175,10 +172,9 @@ router.get("/getUserList", (req, res, next) => {
     .exec()
     .then(result => {
       console.log(result)
-      res.status(200).json({
-        message: "Get User List Successfully",
-        data: result
-      });
+      res.status(200).json(
+        helper.setSuccessResponse({ message: "Get User List Successfully", data: result})
+      );
     })
     .catch(err => {
       console.log(err);
